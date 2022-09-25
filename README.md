@@ -39,5 +39,3 @@
 - created (READONLY)
 - updated (READONLY)
 - publicated
-
-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
