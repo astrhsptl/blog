@@ -16,15 +16,14 @@
 ## Формы
 
 Форма для входа:
-- email
+- username
 - password
 
 Форма для авторизации:
-- firstname
-- lastname
 - username
 - email
 - password
+- password confirmation
 
 Форма для создания новости:
 - title
