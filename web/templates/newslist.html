@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extrastyles %}
+{% endblock %}
+
+{% block main %}
+    {% for item in news %}
+        {{ item.title }}
+        {{ item.content }}
+        {{ item.created }}
+        <a href="{{ item.get_absolute_url }}"><button>Uwu</button></a>
+    <hr>
+    {% endfor %}
+{% endblock %}

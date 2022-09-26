@@ -1,18 +1,95 @@
-from contextlib import redirect_stderr
+from copy import deepcopy
+from django.http import Http404
 from django.contrib import messages
 from django.shortcuts import render
 from django.contrib import messages
-from django.contrib.auth.models import User
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout
+from django.views.generic import ListView, DetailView
+from django.utils.datastructures import MultiValueDictKeyError
 
 
 from .forms import (
-    UserRegistrationForm, UserLoginForm
+    UserRegistrationForm, UserLoginForm, NewsForm
 )
+from .models import News 
+
+
+def edit_form_data(form, query_news) -> dict:
+    result = deepcopy(dict(form))
+    result['title'] = query_news.title
+    result['content'] = query_news.content
+    result['publicated'] = query_news.publicated
+    return result
+
+def editing_concrete_news(request, news_id):
+    try:
+        query = News.objects.get(pk=int(news_id))
+    except:
+        raise Http404('Doesnt exist(')
+    
+    if request.method == 'POST':
+        #form_data = edit_form_data(request.POST, query)
+        form = NewsForm(request.POST)
+        if form.is_valid():
+            query.title = form.data['title']
+            query.content = form.data['content']
+            try:
+                pub = form.data['publicated']
+                query.publicated = True
+            except MultiValueDictKeyError:
+                query.publicated = False
+            query.save()
+            return redirect('news')
+    else:
+        form_data = edit_form_data(request.POST, query)
+        print(form_data)
+        form = NewsForm(data=form_data)
+    context = {
+        'title': 'Editing ...',
+        'form': form,
+    }
+    return render(
+        request, 'edit_news.html', context
+    )
 
 def home(request):
-    return render(request, 'base.html')
+    context = {
+        'title': 'Home'
+    }
+    return render(request, 'home.html', context=context)
+
+def concrete_news(request, news_id):
+    try:
+        query = News.objects.get(pk=int(news_id))
+    except:
+        raise Http404('Doesnt exist(')
+    context = {
+        'title': query.title,
+        'news': query
+    }
+    return render(request, 'detailnews.html', context=context)
+
+def doesntexist(request, exception):
+    return render(request, '404error.html', 
+    context={
+        'title': 'doesnt exist'
+    }
+    )
+
+class NewsView(ListView):
+    model = News
+    template_name = "newslist.html"
+    context_object_name = 'news'
+    allow_empty = False
+
+    def get_context_data(self, *, object_list=0, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'News'
+        return context
+    
+    def get_queryset(self):
+        return News.objects.filter(publicated=True)
 
 
 '''

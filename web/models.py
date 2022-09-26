@@ -8,11 +8,11 @@ class News(models.Model):
     content = models.TextField(
         max_length=4096, verbose_name='content'
     )
-    created = models.DateField(
-        auto_now=True, verbose_name='created'
+    created = models.DateTimeField(
+        auto_now_add=True, verbose_name='created'
     )
-    updated = models.DateField(
-        auto_now_add=True, verbose_name='updated'
+    updated = models.DateTimeField(
+        auto_now=True, verbose_name='updated'
     )
     publicated = models.BooleanField(
         default=False
@@ -22,4 +22,4 @@ class News(models.Model):
         return self.title
 
     def get_absolute_url(self):
-        return reverse('news', kwargs={'pk': self.pk})
+        return reverse('datailnews', kwargs={'news_id': self.pk})

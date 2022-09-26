@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extrastyle %}
+{% endblock %}
+
+{% block main %}
+{{ news.title }} </br>
+{{ news.content }} </br>
+{{ news.created }} </br>
+{{ news.updated }} </br>
+{% endblock %}
