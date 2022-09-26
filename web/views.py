@@ -3,6 +3,7 @@ from django.http import Http404
 from django.contrib import messages
 from django.shortcuts import render
 from django.contrib import messages
+from django.contrib.auth.models import User
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout
 from django.views.generic import ListView, DetailView
@@ -14,6 +15,25 @@ from .forms import (
 )
 from .models import News 
 
+ANON = 'AnonymousUser'
+
+
+def home(request):
+    context = {
+        'title': 'Home'
+    }
+    return render(request, 'home.html', context=context)
+
+def doesntexist(request, exception):
+    return render(request, '404error.html', 
+    context={
+        'title': 'doesnt exist'
+    }
+    )
+
+"""
+block with creating/viewing/editing news
+"""
 
 def edit_form_data(form, query_news) -> dict:
     result = deepcopy(dict(form))
@@ -22,6 +42,37 @@ def edit_form_data(form, query_news) -> dict:
     result['publicated'] = query_news.publicated
     return result
 
+def create_news(request):
+    if request.method == 'POST':
+        form = NewsForm(request.POST)
+        if form.is_valid():
+            try:
+                take = form.data['publicated']
+                publicated = True
+            except MultiValueDictKeyError:
+                publicated = False
+                
+            author = User.objects.get(username=request.user.username)
+                
+            created_news = News(
+                title=form.data['title'],
+                content=form.data['content'],
+                author=author,
+                publicated=publicated,
+            )
+
+            created_news.save()
+            return redirect('news')
+    else:
+        form = NewsForm()
+    context = {
+        'title': 'Creating...',
+        'form': form,
+    }
+    return render(
+        request, 'edit_news.html', context
+    )
+
 def editing_concrete_news(request, news_id):
     try:
         query = News.objects.get(pk=int(news_id))
@@ -29,7 +80,6 @@ def editing_concrete_news(request, news_id):
         raise Http404('Doesnt exist(')
     
     if request.method == 'POST':
-        #form_data = edit_form_data(request.POST, query)
         form = NewsForm(request.POST)
         if form.is_valid():
             query.title = form.data['title']
@@ -43,7 +93,6 @@ def editing_concrete_news(request, news_id):
             return redirect('news')
     else:
         form_data = edit_form_data(request.POST, query)
-        print(form_data)
         form = NewsForm(data=form_data)
     context = {
         'title': 'Editing ...',
@@ -52,12 +101,6 @@ def editing_concrete_news(request, news_id):
     return render(
         request, 'edit_news.html', context
     )
-
-def home(request):
-    context = {
-        'title': 'Home'
-    }
-    return render(request, 'home.html', context=context)
 
 def concrete_news(request, news_id):
     try:
@@ -69,13 +112,6 @@ def concrete_news(request, news_id):
         'news': query
     }
     return render(request, 'detailnews.html', context=context)
-
-def doesntexist(request, exception):
-    return render(request, '404error.html', 
-    context={
-        'title': 'doesnt exist'
-    }
-    )
 
 class NewsView(ListView):
     model = News
